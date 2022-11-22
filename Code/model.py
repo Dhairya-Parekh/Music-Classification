@@ -4,23 +4,30 @@ import torch.nn as nn
 import torch.functional as F
 import numpy as np
 
-
 class MC(nn.Module):
-    def __init__(self,input_size,output_size) -> None:
+    def __init__(self,input_size) -> None:
         super().__init__()
         self.input_size = input_size
-        self.fc1 = nn.Linear(input_size,200)
-        self.fc2 = nn.Linear(200,100)
-        self.fc3 = nn.Linear(100,output_size)
+        self.fc1 = nn.Linear(input_size,50)
+        self.fc2 = nn.Linear(50,50)
+        self.fc3 = nn.Linear(50,10)
         self.relu = nn.ReLU()
         self.softmax = nn.Softmax()
         self.sigmoid = nn.Sigmoid()
+        self.tanh = nn.Tanh()
+        
+        nn.init.xavier_uniform_(self.fc1.weight)
+        nn.init.zeros_(self.fc1.bias)
+        nn.init.xavier_uniform_(self.fc2.weight)
+        nn.init.zeros_(self.fc2.bias)
+        nn.init.xavier_uniform_(self.fc3.weight)
+        nn.init.zeros_(self.fc3.bias)
+        
     def forward(self,x):
-        return self.softmax(self.fc3(self.sigmoid(self.fc2(self.fc1(x)))))
-        # return self.softmax(self.relu(self.fc1(x)))
+        output = self.fc3(self.tanh(self.fc2(self.tanh(self.fc1(x)))))
+        return output
 
 def train(model,X_trn,Y_trn,X_val,Y_val,epochs=80):
-    epochs = 10
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
     loss_func = torch.nn.CrossEntropyLoss()
     count = len(X_trn)
@@ -39,7 +46,7 @@ def train(model,X_trn,Y_trn,X_val,Y_val,epochs=80):
     with torch.no_grad():
         for i in range(len(X_val)):
             v = model(X_val[i])
-            y_preds[i] = torch.amax(v)
+            y_preds[i] = torch.argmax(v)
     print("accuracy: ",sum(y_preds==Y_val)/len(Y_val))
        
     
@@ -52,25 +59,34 @@ if __name__ == '__main__':
     
     
     df_svm.drop(['filename','length'],axis=1,inplace=True)
+    cols = df_svm.columns
+    for col in cols:
+        if col.endswith("var"):
+            df_svm.drop([col],axis=1,inplace=True)
     df_svm = df_svm.sample(frac=1)
     labels = df_svm['label'].unique()
     Y = df_svm['label']
     df_svm.drop(['label'],axis=1,inplace=True)
+    # normalization
+    mean = df_svm.mean(axis=0)
+    sd = df_svm.std(axis=0)
+    df_svm = (df_svm-mean)/sd
+    
     mapping = {}
     for i,label in enumerate(labels):
         mapping[i] = label
         Y[Y==label] = i
-    # print(df_svm)
+    
     Y = torch.tensor(Y)
     X = torch.tensor(df_svm.values.astype(np.float32))
-    # print(Y.shape,X.shape)
-    tc = int(0.8*len(Y))
+    
+    tc = int(0.9*len(Y))
     X_trn = X[:tc,:]
     Y_trn = Y[:tc]
     X_val = X[tc:,:]
     Y_val = Y[tc:]
-    # print(Y_trn,X_trn)
-    model = MC(X_trn.shape[1],10)
-    train(model,X_trn,Y_trn,X_val,Y_val,80)
+    
+    model = MC(X_trn.shape[1])
+    train(model,X_trn,Y_trn,X_val,Y_val,60)
     
     
