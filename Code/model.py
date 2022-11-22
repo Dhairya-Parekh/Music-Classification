@@ -9,18 +9,19 @@ class MC(nn.Module):
     def __init__(self,input_size,output_size) -> None:
         super().__init__()
         self.input_size = input_size
-        self.fc1 = nn.Linear(input_size,output_size)
-        # self.fc2 = nn.Linear(50,100)
-        # self.fc3 = nn.Linear(100,output_size)
+        self.fc1 = nn.Linear(input_size,200)
+        self.fc2 = nn.Linear(200,100)
+        self.fc3 = nn.Linear(100,output_size)
         self.relu = nn.ReLU()
         self.softmax = nn.Softmax()
+        self.sigmoid = nn.Sigmoid()
     def forward(self,x):
-        # return self.softmax(self.relu(self.fc3(self.relu(self.fc1(x)))))
-        return self.softmax(self.relu(self.fc1(x)))
+        return self.softmax(self.fc3(self.sigmoid(self.fc2(self.fc1(x)))))
+        # return self.softmax(self.relu(self.fc1(x)))
 
 def train(model,X_trn,Y_trn,X_val,Y_val,epochs=80):
     epochs = 10
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
     loss_func = torch.nn.CrossEntropyLoss()
     count = len(X_trn)
     for epoch in range(epochs):
@@ -63,11 +64,11 @@ if __name__ == '__main__':
     Y = torch.tensor(Y)
     X = torch.tensor(df_svm.values.astype(np.float32))
     # print(Y.shape,X.shape)
-    train = int(0.8*len(Y))
-    X_trn = X[:train,:]
-    Y_trn = Y[:train]
-    X_val = X[train:,:]
-    Y_val = Y[train:]
+    tc = int(0.8*len(Y))
+    X_trn = X[:tc,:]
+    Y_trn = Y[:tc]
+    X_val = X[tc:,:]
+    Y_val = Y[tc:]
     # print(Y_trn,X_trn)
     model = MC(X_trn.shape[1],10)
     train(model,X_trn,Y_trn,X_val,Y_val,80)
