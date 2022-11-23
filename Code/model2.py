@@ -4,6 +4,9 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 from torch.utils.data import Dataset,DataLoader
+import pickle as pkl
+
+np.random.seed(0)
 
 class MusicDataset(Dataset):
     def __init__(self,X,Y):
@@ -113,6 +116,7 @@ if __name__ == '__main__':
     
     model = lstm_model(input_dim=X_trn.shape[2],hidden_size=100,num_layers=3,batch_size=batch_size)
     train(model,train_dataloader,val_dataloader,200)
+    pkl.dump(model,open("../Model/model2.pkl","wb"))  
     
     
     

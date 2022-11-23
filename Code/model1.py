@@ -3,8 +3,10 @@ import torch
 import torch.nn as nn
 import torch.functional as F
 import numpy as np
+import pickle as pkl
 
-class (nn.Module):
+np.random.seed(0)
+class MC(nn.Module):
     def __init__(self,input_size) -> None:
         super().__init__()
         self.input_size = input_size
@@ -97,6 +99,8 @@ if __name__ == '__main__':
     Y_val = Y[tc:]
     
     model = MC(X_trn.shape[1])
-    train(model,X_trn,Y_trn,X_val,Y_val,80)
+    train(model,X_trn,Y_trn,X_val,Y_val,1)
     
+    # save the model
+    pkl.dump(model,open("../Model/model1.pkl","wb"))    
     
