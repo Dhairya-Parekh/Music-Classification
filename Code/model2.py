@@ -24,13 +24,28 @@ class lstm_model(nn.Module):
         self.num_layers = num_layers
         self.batch_size = batch_size
         self.lstm = nn.LSTM(input_size=input_dim,hidden_size=hidden_size, num_layers = num_layers, batch_first=True)
-        self.fc = nn.Linear(hidden_size,10)
+        self.fc1 = nn.Linear(hidden_size,50)
+        self.fc2 = nn.Linear(50,25)
+        self.fc3 = nn.Linear(25,10)
+        self.tanh = nn.Tanh()
+        
+        nn.init.xavier_uniform_(self.fc1.weight)
+        nn.init.zeros_(self.fc1.bias)
+        nn.init.xavier_uniform_(self.fc2.weight)
+        nn.init.zeros_(self.fc2.bias)
+        nn.init.xavier_uniform_(self.fc3.weight)
+        nn.init.zeros_(self.fc3.bias)
+        
     
     def forward(self,x):
         h_0 = Variable(torch.zeros(self.num_layers,self.batch_size,self.hidden_size)) 
         c_0 = Variable(torch.zeros(self.num_layers,self.batch_size,self.hidden_size))
         out,_ = self.lstm(x,(h_0,c_0))
-        out = self.fc(out[:,-1,:])
+        out = self.fc1(out[:,-1,:])
+        out = self.tanh(out)
+        out = self.fc2(out)
+        out = self.tanh(out)
+        out = self.fc3(out)
         return out
 
 
@@ -97,4 +112,4 @@ if __name__ == '__main__':
     val_dataloader = DataLoader(val_dataset,batch_size,drop_last=True)
     
     model = lstm_model(input_dim=X_trn.shape[2],hidden_size=100,num_layers=3,batch_size=batch_size)
-    train(model,train_dataloader,val_dataloader,30)
+    train(model,train_dataloader,val_dataloader,60)
