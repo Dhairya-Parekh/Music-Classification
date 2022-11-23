@@ -1,14 +1,12 @@
-'''
-Feed forward Neural Network for Music Genre Classification AI-ML Project
-Dhairya Parekh(200050097)| Utkarsh Pratap Singh(200050146)| Naman Singh Rana(200050083)| Aditya Kadoo(200050055)
-'''
 import pandas as pd
+import numpy as np
 import torch
 import torch.nn as nn
-import torch.functional as F
-import numpy as np
+from torch.autograd import Variable
+from torch.utils.data import Dataset,DataLoader
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score,precision_recall_fscore_support, confusion_matrix,fbeta_score
+
 
 '''
 Prints validation Accuracy,Precision,Recall, other metrics 
@@ -49,22 +47,31 @@ def plot_confusion_matrix(genre_list, mat):
             plt.text(j, i, format(conf_matrix[i, j], fmt), horizontalalignment="center",color=color)
     plt.ylabel('True Genre',fontsize=22)
     plt.xlabel('Predicted Genre', fontsize=22)
-    plt.savefig('confusion_matrix1.png')
+    plt.savefig('confusion_matrix2.png')
 
+class MusicDataset(Dataset):
+    def __init__(self,X,Y):
+        self.X = X
+        self.Y = Y
+    
+    def __len__(self):
+        return len(self.Y)
+    
+    def __getitem__(self, index):
+        return self.X[index], self.Y[index]
 
-class MC(nn.Module):
-    def __init__(self,input_size) -> None:
+class lstm_model(nn.Module):
+    def __init__(self,input_dim,hidden_size,num_layers,batch_size) -> None:
         super().__init__()
-        self.input_size = input_size
-        self.fc1 = nn.Linear(input_size,60)
-        self.fc2 = nn.Linear(60,30)
-        self.fc3 = nn.Linear(30,10)
-        self.relu = nn.ReLU()
-        self.softmax = nn.Softmax()
-        self.sigmoid = nn.Sigmoid()
+        self.input_dim = input_dim
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.batch_size = batch_size
+        self.lstm = nn.LSTM(input_size=input_dim,hidden_size=hidden_size, num_layers = num_layers, batch_first=True)
+        self.fc1 = nn.Linear(hidden_size,50)
+        self.fc2 = nn.Linear(50,25)
+        self.fc3 = nn.Linear(25,10)
         self.tanh = nn.Tanh()
-        self.drop1 = nn.Dropout(0.05)
-        self.drop2 = nn.Dropout(0.05)
         
         nn.init.xavier_uniform_(self.fc1.weight)
         nn.init.zeros_(self.fc1.bias)
@@ -72,85 +79,87 @@ class MC(nn.Module):
         nn.init.zeros_(self.fc2.bias)
         nn.init.xavier_uniform_(self.fc3.weight)
         nn.init.zeros_(self.fc3.bias)
-
         
+    
     def forward(self,x):
-        x = self.fc1(x)
-        x = self.tanh(x)
-        x = self.fc2(x)
-        x = self.tanh(x)
-        x = self.fc3(x)
-        return x
+        h_0 = Variable(torch.zeros(self.num_layers,self.batch_size,self.hidden_size)) 
+        c_0 = Variable(torch.zeros(self.num_layers,self.batch_size,self.hidden_size))
+        out,_ = self.lstm(x,(h_0,c_0))
+        out = self.fc1(out[:,-1,:])
+        out = self.tanh(out)
+        out = self.fc2(out)
+        out = self.tanh(out)
+        out = self.fc3(out)
+        return out
 
-'''      
-Training neural network
-'''
-def train(model,X_trn,Y_trn,X_val,Y_val,epochs=80):
+
+def train(model,train_dataloader,val_dataloader,epochs=80):
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
     loss_func = torch.nn.CrossEntropyLoss()
-    count = len(X_trn)
     for epoch in range(epochs):
         running_loss = 0
-        for i  in range(count):
+        for x,y in train_dataloader:
             optimizer.zero_grad()
-            v = model(X_trn[i])
-            loss = loss_func(v,Y_trn[i])
+            v = model(x)
+            loss = loss_func(v,y)
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
         print("epoch: ",epoch," loss: ",running_loss)
         
-    y_preds = torch.empty(size=(len(X_val),))
+    correct_preds = 0
+    total_preds = 0
+    Y_val=[]
+    Y_pred=[]
     with torch.no_grad():
-        for i in range(len(X_val)):
-            v = model(X_val[i])
-            y_preds[i] = torch.argmax(v)
-    metrics(Y_val.tolist(),y_preds.tolist())
+        for x,y in val_dataloader:
+            v = model(x)
+            y_preds = torch.argmax(v,axis=1)
+            Y_val+=y.tolist()
+            Y_pred+=y_preds.tolist()
+    metrics(Y_val,Y_pred)
+    #print("accuracy: ",correct_preds/total_preds)
+        
+        
+        
 
-
-
-       
-    
-    
 if __name__ == '__main__':
-    
-    df_lstm = pd.read_csv("../Dataset/features_3_sec.csv")
-    df_svm = pd.read_csv("../Dataset/features_30_sec.csv")
-    
-    
-    
-    df_svm.drop(['filename','length'],axis=1,inplace=True)
-    cols = df_svm.columns
+    df = pd.read_csv("../Dataset/features_3_sec.csv")
+    df.drop(['filename','length'],axis=1,inplace=True)
+    labels = df['label'].unique()
+    cols = df.columns
     for col in cols:
         if col.endswith("var"):
-            df_svm.drop([col],axis=1,inplace=True)
-    df_svm = df_svm.sample(frac=1)
-    labels = df_svm['label'].unique()
-    Y = df_svm['label']
-    df_svm.drop(['label'],axis=1,inplace=True)
-    # normalization
-    mean = df_svm.mean(axis=0)
-    sd = df_svm.std(axis=0)
-    df_svm = (df_svm-mean)/sd
-    
+            df.drop([col],axis=1,inplace=True)
+    Y = df['label'][df.index%10==0]
     mapping = {}
     for i,label in enumerate(labels):
         mapping[i] = label
         Y[Y==label] = i
-    
-    Y = torch.tensor(Y)
-    X = torch.tensor(df_svm.values.astype(np.float32))
-
-    '''
-    Split data into train and validation sets
-    '''
+    df.drop(['label'],axis=1,inplace=True)
+    X = df.to_numpy().reshape(len(Y),10,-1)
+    Y = Y.to_numpy().reshape(len(Y))
+    indx = np.random.choice(len(Y),len(Y),replace=True)
+    X = X[indx]
+    Y = Y[indx]
+    X = torch.tensor(X.astype(np.float32))
+    Y = torch.tensor(Y.astype(np.uint8))
+    X = (X - torch.mean(X))/torch.std(X)
     tc = int(0.9*len(Y))
-    X_trn = X[:tc,:]
+    X_trn = X[:tc,:,:]
     Y_trn = Y[:tc]
-    X_val = X[tc:,:]
+    X_val = X[tc:,:,:]
     Y_val = Y[tc:]
     
-    model = MC(X_trn.shape[1])
-    train(model,X_trn,Y_trn,X_val,Y_val,80)
+    train_dataset = MusicDataset(X_trn,Y_trn)
+    val_dataset = MusicDataset(X_val,Y_val)
+    
+    batch_size = 16
+    train_dataloader = DataLoader(train_dataset,batch_size,drop_last=True)
+    val_dataloader = DataLoader(val_dataset,batch_size,drop_last=True)
+    
+    model = lstm_model(input_dim=X_trn.shape[2],hidden_size=100,num_layers=3,batch_size=batch_size)
+    train(model,train_dataloader,val_dataloader,150)
+    
     
     
