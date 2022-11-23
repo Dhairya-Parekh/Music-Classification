@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.functional as F
 import numpy as np
 
-class MC(nn.Module):
+class (nn.Module):
     def __init__(self,input_size) -> None:
         super().__init__()
         self.input_size = input_size

@@ -112,4 +112,7 @@ if __name__ == '__main__':
     val_dataloader = DataLoader(val_dataset,batch_size,drop_last=True)
     
     model = lstm_model(input_dim=X_trn.shape[2],hidden_size=100,num_layers=3,batch_size=batch_size)
-    train(model,train_dataloader,val_dataloader,60)
+    train(model,train_dataloader,val_dataloader,200)
+    
+    
+    
