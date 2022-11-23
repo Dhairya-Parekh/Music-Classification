@@ -18,7 +18,7 @@ def model1_data():
         if col.endswith("var"):
             df.drop([col],axis=1,inplace=True)
     
-    df = df.sample(frac=1, random_state=RAND_SEED)
+    # df = df.sample(frac=1, random_state=RAND_SEED)
 
     # normalization
     Y = df['label']
@@ -39,25 +39,30 @@ def model1_data():
     tst_x = []
     tst_y = []
     
-    for index, row in df.iterrows():
+    random.seed(RAND_SEED)
+    idx = list(range(len(Y)))
+    random.shuffle(idx)
+
+    for index in idx:
         row_label = Y.loc[index]
+        row = np.array(df.loc[index])
         used_count[row_label] += 1
         if used_count[row_label] <= TRN*label_count[row_label]:
             trn_y.append(label_idx[row_label])
-            trn_x.append([row[col] for col in cols if col!='label' and not col.endswith("var")])
+            trn_x.append(row)
         elif used_count[row_label] <= (TRN+VAL)*label_count[row_label]:
             val_y.append(label_idx[row_label])
-            val_x.append([row[col] for col in cols if col!='label' and not col.endswith("var")])
+            val_x.append(row)
         elif used_count[row_label] <= (TRN+VAL+TST)*label_count[row_label]:
             tst_y.append(label_idx[row_label])
-            tst_x.append([row[col] for col in cols if col!='label' and not col.endswith("var")])
+            tst_x.append(row)
     
-    trn_x = torch.tensor(trn_x,dtype=torch.float32)
-    trn_y = torch.tensor(trn_y)
-    val_x = torch.tensor(val_x,dtype=torch.float32)
-    val_y = torch.tensor(val_y)
-    tst_x = torch.tensor(tst_x,dtype=torch.float32)
-    tst_y = torch.tensor(tst_y)
+    trn_x = torch.tensor(np.array(trn_x), dtype=torch.float32)
+    trn_y = torch.tensor(np.array(trn_y))
+    val_x = torch.tensor(np.array(val_x), dtype=torch.float32)
+    val_y = torch.tensor(np.array(val_y))
+    tst_x = torch.tensor(np.array(tst_x), dtype=torch.float32)
+    tst_y = torch.tensor(np.array(tst_y))
 
     return labels, trn_x, trn_y, val_x, val_y, tst_x, tst_y
 
@@ -71,7 +76,7 @@ def model2_data():
         if col.endswith("var"):
             df.drop([col],axis=1,inplace=True)
     
-    df = df.sample(frac=1, random_state=RAND_SEED)
+    # df = df.sample(frac=1, random_state=RAND_SEED)
 
     # normalization
     Y = df['label'][df.index%10==0]
@@ -92,9 +97,14 @@ def model2_data():
     val_y = []
     tst_x = []
     tst_y = []
+
+    random.seed(RAND_SEED)
+    idx = list(range(len(X)))
+    random.shuffle(idx)
     
-    for index, row in enumerate(X):
+    for index in idx:
         row_label = Y.loc[index*10]
+        row = X[index]
         used_count[row_label] += 1
         if used_count[row_label] <= TRN*label_count[row_label]:
             trn_y.append(label_idx[row_label])
@@ -106,11 +116,11 @@ def model2_data():
             tst_y.append(label_idx[row_label])
             tst_x.append(row)
     
-    trn_x = torch.tensor(np.array(trn_x),dtype=torch.float32)
+    trn_x = torch.tensor(np.array(trn_x), dtype=torch.float32)
     trn_y = torch.tensor(np.array(trn_y))
-    val_x = torch.tensor(np.array(val_x),dtype=torch.float32)
+    val_x = torch.tensor(np.array(val_x), dtype=torch.float32)
     val_y = torch.tensor(np.array(val_y))
-    tst_x = torch.tensor(np.array(tst_x),dtype=torch.float32)
+    tst_x = torch.tensor(np.array(tst_x), dtype=torch.float32)
     tst_y = torch.tensor(np.array(tst_y))
     
     
@@ -181,11 +191,17 @@ def model3_data():
             tst_y.append(label_idx[row_label])
             tst_x.append(np.vstack((row1[None, :],row2)))
     
-    trn_x = torch.tensor(np.array(trn_x),dtype=torch.float32)
+    trn_x = torch.tensor(np.array(trn_x), dtype=torch.float32)
     trn_y = torch.tensor(np.array(trn_y))
-    val_x = torch.tensor(np.array(val_x),dtype=torch.float32)
+    val_x = torch.tensor(np.array(val_x), dtype=torch.float32)
     val_y = torch.tensor(np.array(val_y))
-    tst_x = torch.tensor(np.array(tst_x),dtype=torch.float32)
+    tst_x = torch.tensor(np.array(tst_x), dtype=torch.float32)
     tst_y = torch.tensor(np.array(tst_y))
     
     return labels, trn_x, trn_y, val_x, val_y, tst_x, tst_y
+
+if __name__=="__main__":
+    print(model1_data()[2][456])
+    print(model2_data()[2][456])
+    print(model3_data()[2][456])
+    print(model1_data()[2][456])
