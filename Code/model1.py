@@ -4,8 +4,8 @@ import torch.nn as nn
 import torch.functional as F
 import numpy as np
 import pickle as pkl
+from feature_extraction import model1_data
 
-np.random.seed(0)
 class MC(nn.Module):
     def __init__(self,input_size) -> None:
         super().__init__()
@@ -40,7 +40,7 @@ class MC(nn.Module):
         return x
 
 def train(model,X_trn,Y_trn,X_val,Y_val,epochs=80):
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     loss_func = torch.nn.CrossEntropyLoss()
     count = len(X_trn)
     for epoch in range(epochs):
@@ -65,41 +65,9 @@ def train(model,X_trn,Y_trn,X_val,Y_val,epochs=80):
     
 if __name__ == '__main__':
     
-    df_lstm = pd.read_csv("/Users/nsr/Desktop/sem 5/AI ML Lab/Music-Classification/Dataset/features_3_sec.csv")
-    df_svm = pd.read_csv("/Users/nsr/Desktop/sem 5/AI ML Lab/Music-Classification/Dataset/features_30_sec.csv")
-    
-    
-    
-    df_svm.drop(['filename','length'],axis=1,inplace=True)
-    cols = df_svm.columns
-    for col in cols:
-        if col.endswith("var"):
-            df_svm.drop([col],axis=1,inplace=True)
-    df_svm = df_svm.sample(frac=1)
-    labels = df_svm['label'].unique()
-    Y = df_svm['label']
-    df_svm.drop(['label'],axis=1,inplace=True)
-    # normalization
-    mean = df_svm.mean(axis=0)
-    sd = df_svm.std(axis=0)
-    df_svm = (df_svm-mean)/sd
-    
-    mapping = {}
-    for i,label in enumerate(labels):
-        mapping[i] = label
-        Y[Y==label] = i
-    
-    Y = torch.tensor(Y)
-    X = torch.tensor(df_svm.values.astype(np.float32))
-    
-    tc = int(0.9*len(Y))
-    X_trn = X[:tc,:]
-    Y_trn = Y[:tc]
-    X_val = X[tc:,:]
-    Y_val = Y[tc:]
-    
-    model = MC(X_trn.shape[1])
-    train(model,X_trn,Y_trn,X_val,Y_val,1)
+    labels, trn_x, trn_y, val_x, val_y, tst_x, tst_y = model1_data()    
+    model = MC(trn_x.shape[1])
+    train(model,trn_x,trn_y,val_x,val_y,100)
     
     # save the model
     pkl.dump(model,open("../Model/model1.pkl","wb"))    

@@ -52,11 +52,11 @@ def model1_data():
             tst_y.append(label_idx[row_label])
             tst_x.append([row[col] for col in cols if col!='label' and not col.endswith("var")])
     
-    trn_x = torch.tensor(trn_x)
+    trn_x = torch.tensor(trn_x,dtype=torch.float32)
     trn_y = torch.tensor(trn_y)
-    val_x = torch.tensor(val_x)
+    val_x = torch.tensor(val_x,dtype=torch.float32)
     val_y = torch.tensor(val_y)
-    tst_x = torch.tensor(tst_x)
+    tst_x = torch.tensor(tst_x,dtype=torch.float32)
     tst_y = torch.tensor(tst_y)
 
     return labels, trn_x, trn_y, val_x, val_y, tst_x, tst_y
@@ -106,12 +106,13 @@ def model2_data():
             tst_y.append(label_idx[row_label])
             tst_x.append(row)
     
-    trn_x = torch.tensor(np.array(trn_x))
+    trn_x = torch.tensor(np.array(trn_x),dtype=torch.float32)
     trn_y = torch.tensor(np.array(trn_y))
-    val_x = torch.tensor(np.array(val_x))
+    val_x = torch.tensor(np.array(val_x),dtype=torch.float32)
     val_y = torch.tensor(np.array(val_y))
-    tst_x = torch.tensor(np.array(tst_x))
+    tst_x = torch.tensor(np.array(tst_x),dtype=torch.float32)
     tst_y = torch.tensor(np.array(tst_y))
+    
     
     return labels, trn_x, trn_y, val_x, val_y, tst_x, tst_y
 
@@ -180,11 +181,11 @@ def model3_data():
             tst_y.append(label_idx[row_label])
             tst_x.append(np.vstack((row1[None, :],row2)))
     
-    trn_x = torch.tensor(np.array(trn_x))
+    trn_x = torch.tensor(np.array(trn_x),dtype=torch.float32)
     trn_y = torch.tensor(np.array(trn_y))
-    val_x = torch.tensor(np.array(val_x))
+    val_x = torch.tensor(np.array(val_x),dtype=torch.float32)
     val_y = torch.tensor(np.array(val_y))
-    tst_x = torch.tensor(np.array(tst_x))
+    tst_x = torch.tensor(np.array(tst_x),dtype=torch.float32)
     tst_y = torch.tensor(np.array(tst_y))
     
     return labels, trn_x, trn_y, val_x, val_y, tst_x, tst_y
