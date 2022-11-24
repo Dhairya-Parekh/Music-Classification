@@ -5,7 +5,7 @@ from sklearn.metrics import accuracy_score,precision_recall_fscore_support, conf
 '''
 Prints validation Accuracy,Precision,Recall, other metrics 
 '''
-def metrics(true_values,pred_values):
+def metrics(true_values,pred_values,name):
     accuracy=accuracy_score(true_values,pred_values)
     precision,recall,f1_score,support = precision_recall_fscore_support(true_values,pred_values,average='weighted')
     f2_score = fbeta_score(true_values,pred_values,beta=2.0,average='weighted')
@@ -19,12 +19,12 @@ def metrics(true_values,pred_values):
     genre_list = ['blues','classical','country','disco','hiphop','jazz','metal','pop','reggae','rock']
     genre_list = sorted(genre_list)
     conf_matrix = confusion_matrix(true_values,pred_values,labels=range(10),normalize="true")
-    plot_confusion_matrix(genre_list,conf_matrix)
+    plot_confusion_matrix(genre_list,conf_matrix,name)
 
 '''    
 Plots Confusion Matrix
 '''
-def plot_confusion_matrix(genre_list, mat):
+def plot_confusion_matrix(genre_list, mat,name):
     conf_matrix = np.copy(mat)
     conf_matrix = conf_matrix / np.sum(conf_matrix, axis=1)
     box = plt.subplots(figsize=(30,15))[1]
@@ -41,4 +41,4 @@ def plot_confusion_matrix(genre_list, mat):
             plt.text(j, i, format(conf_matrix[i, j], fmt), horizontalalignment="center",color=color)
     plt.ylabel('True Genre',fontsize=22)
     plt.xlabel('Predicted Genre', fontsize=22)
-    plt.savefig('confusion_matrix1.png')
+    plt.savefig('../Metrics/confusion_matrix_'+name+'.png')

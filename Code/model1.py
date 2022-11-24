@@ -2,14 +2,14 @@
 Feed forward Neural Network for Music Genre Classification AI-ML Project
 Dhairya Parekh(200050097)| Utkarsh Pratap Singh(200050146)| Naman Singh Rana(200050083)| Aditya Kadoo(200050055)
 '''
-from visualize import *
 import pandas as pd
 import torch
 import torch.nn as nn
 import torch.functional as F
 import numpy as np
-
-
+import pickle as pkl
+from visualize import *
+from feature_extraction import model1_data
 
 class MC(nn.Module):
     def __init__(self,input_size) -> None:
@@ -36,16 +36,20 @@ class MC(nn.Module):
     def forward(self,x):
         x = self.fc1(x)
         x = self.tanh(x)
+        # x = self.drop1(x)
         x = self.fc2(x)
         x = self.tanh(x)
+        # x = self.drop2(x)
         x = self.fc3(x)
+        # x = self.tanh(x)
         return x
+
 
 '''      
 Training neural network
 '''
 def train(model,X_trn,Y_trn,X_val,Y_val,epochs=80):
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     loss_func = torch.nn.CrossEntropyLoss()
     count = len(X_trn)
     for epoch in range(epochs):
@@ -64,52 +68,17 @@ def train(model,X_trn,Y_trn,X_val,Y_val,epochs=80):
         for i in range(len(X_val)):
             v = model(X_val[i])
             y_preds[i] = torch.argmax(v)
-    metrics(Y_val.tolist(),y_preds.tolist())
-
-
-
+    metrics(Y_val.tolist(),y_preds.tolist(),'model1')
+    
        
     
     
 if __name__ == '__main__':
     
-    df_lstm = pd.read_csv("../Dataset/features_3_sec.csv")
-    df_svm = pd.read_csv("../Dataset/features_30_sec.csv")
+    labels, trn_x, trn_y, val_x, val_y, tst_x, tst_y = model1_data()    
+    model = MC(trn_x.shape[1])
+    train(model,trn_x,trn_y,val_x,val_y,100)
     
-    
-    
-    df_svm.drop(['filename','length'],axis=1,inplace=True)
-    cols = df_svm.columns
-    for col in cols:
-        if col.endswith("var"):
-            df_svm.drop([col],axis=1,inplace=True)
-    df_svm = df_svm.sample(frac=1)
-    labels = df_svm['label'].unique()
-    Y = df_svm['label']
-    df_svm.drop(['label'],axis=1,inplace=True)
-    # normalization
-    mean = df_svm.mean(axis=0)
-    sd = df_svm.std(axis=0)
-    df_svm = (df_svm-mean)/sd
-    
-    mapping = {}
-    for i,label in enumerate(labels):
-        mapping[i] = label
-        Y[Y==label] = i
-    
-    Y = torch.tensor(Y)
-    X = torch.tensor(df_svm.values.astype(np.float32))
-
-    '''
-    Split data into train and validation sets
-    '''
-    tc = int(0.9*len(Y))
-    X_trn = X[:tc,:]
-    Y_trn = Y[:tc]
-    X_val = X[tc:,:]
-    Y_val = Y[tc:]
-    
-    model = MC(X_trn.shape[1])
-    train(model,X_trn,Y_trn,X_val,Y_val,80)
-    
+    # save the model
+    pkl.dump(model,open("../Model/model1.pkl","wb"))    
     
