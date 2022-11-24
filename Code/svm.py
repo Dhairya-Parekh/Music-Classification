@@ -4,6 +4,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 import torch
 from feature_extraction import model1_data, model2_data
+from visualize import *
 
 labels, trn_x, trn_y, val_x, val_y, tst_x, tst_y = model1_data() 
 
@@ -15,8 +16,12 @@ svm_models = {
 }
 print("*"*10)
 for kernel, model in svm_models.items():
+    print(kernel)
     model.fit(trn_x, trn_y)
-    print(f"{kernel}_trn : {((model.predict(trn_x)-trn_y.cpu().detach().numpy())==0).sum()/(trn_y.shape[0])}")
-    print(f"{kernel}_val : {((model.predict(val_x)-val_y.cpu().detach().numpy())==0).sum()/(val_y.shape[0])}")
-    print(f"{kernel}_tst : {((model.predict(tst_x)-tst_y.cpu().detach().numpy())==0).sum()/(tst_y.shape[0])}")
+    Y_pred=model.predict(val_x).tolist()               
+    metrics(val_y,Y_pred,'SVM')
+
+    # print(f"{kernel}_trn : {((model.predict(trn_x)-trn_y.cpu().detach().numpy())==0).sum()/(trn_y.shape[0])}")
+    # print(f"{kernel}_val : {((model.predict(val_x)-val_y.cpu().detach().numpy())==0).sum()/(val_y.shape[0])}")
+    # print(f"{kernel}_tst : {((model.predict(tst_x)-tst_y.cpu().detach().numpy())==0).sum()/(tst_y.shape[0])}")
     print("*"*10)
