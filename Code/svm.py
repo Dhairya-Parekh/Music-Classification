@@ -21,7 +21,7 @@ for kernel, model in svm_models.items():
     Y_pred=model.predict(val_x).tolist()               
     metrics(val_y,Y_pred,'SVM')
 
-    # print(f"{kernel}_trn : {((model.predict(trn_x)-trn_y.cpu().detach().numpy())==0).sum()/(trn_y.shape[0])}")
-    # print(f"{kernel}_val : {((model.predict(val_x)-val_y.cpu().detach().numpy())==0).sum()/(val_y.shape[0])}")
-    # print(f"{kernel}_tst : {((model.predict(tst_x)-tst_y.cpu().detach().numpy())==0).sum()/(tst_y.shape[0])}")
+    print(f"{kernel}_trn : {((model.predict(trn_x)-trn_y.cpu().detach().numpy())==0).sum()/(trn_y.shape[0])}")
+    print(f"{kernel}_val : {((model.predict(val_x)-val_y.cpu().detach().numpy())==0).sum()/(val_y.shape[0])}")
+    print(f"{kernel}_tst : {((model.predict(tst_x)-tst_y.cpu().detach().numpy())==0).sum()/(tst_y.shape[0])}")
     print("*"*10)

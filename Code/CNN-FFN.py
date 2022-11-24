@@ -20,7 +20,7 @@ class MusicDataset(Dataset):
         return self.X[index], self.Y[index]
 
 
-class CNN_LSTM(nn.Module):
+class CNN_FFN(nn.Module):
     def __init__(self,input_size) -> None:
         super().__init__()
         self.input_size = input_size
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     val_dataset = MusicDataset(val_x,val_y)
     trn_dataloader = DataLoader(trn_dataset,batch_size)
     val_dataloader = DataLoader(val_dataset,batch_size)
-    model = CNN_LSTM(trn_x.shape[1])
+    model = CNN_FFN(trn_x.shape[1])
     train(model,trn_dataloader,val_dataloader,50)
     test_accuracy(model,tst_x,tst_y)
     test_accuracy(model,trn_x,trn_y)
