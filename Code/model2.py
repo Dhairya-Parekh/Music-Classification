@@ -57,6 +57,7 @@ class lstm_model(nn.Module):
 def train(model,train_dataloader,val_dataloader,epochs=80,batch_size=16):
     optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
     loss_func = torch.nn.CrossEntropyLoss()
+    test_err=[]
     for epoch in range(epochs):
         running_loss = 0
         for x,y in train_dataloader:
@@ -66,7 +67,9 @@ def train(model,train_dataloader,val_dataloader,epochs=80,batch_size=16):
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
+        test_err.append(running_loss)
         print("epoch: ",epoch," loss: ",running_loss)
+    plot_loss(test_err,'model2')
  
     Y_val=[]
     Y_pred=[]

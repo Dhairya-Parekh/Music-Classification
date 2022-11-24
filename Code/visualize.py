@@ -42,3 +42,10 @@ def plot_confusion_matrix(genre_list, mat,name):
     plt.ylabel('True Genre',fontsize=22)
     plt.xlabel('Predicted Genre', fontsize=22)
     plt.savefig('../Metrics/confusion_matrix_'+name+'.png')
+
+def plot_loss(test_err,name):
+    xvals = np.arange(0,len(test_err))
+    plt.plot(xvals, test_err)
+    plt.xlabel("epochs")
+    plt.ylabel("test error")
+    plt.savefig('../Metrics/loss_'+name+'.png') 
