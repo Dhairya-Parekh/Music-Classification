@@ -76,7 +76,7 @@ def train(model,train_dataloader,val_dataloader,epochs=80,batch_size=32):
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
-            test_err.append(running_loss)
+        test_err.append(running_loss)
         print("epoch: ",epoch," loss: ",running_loss)
     plot_loss(test_err,'LSTM')   
     Y_val=[]
