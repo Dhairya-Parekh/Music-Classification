@@ -1,6 +1,10 @@
 import librosa as lb
 import numpy as np
 import torch
+import argparse as arg
+import pickle as pkl
+from FFN import FFN
+import pandas as pd
 
 
 SAMPLE_RATE = 22050
@@ -20,3 +24,31 @@ def audio_to_embedding(audio_file):
     for i in range(1,21):
         music_vector[0][8+i] = mfcc[i-1].mean()
     return torch.Tensor(music_vector)
+
+if __name__=='__main__':
+    parser = arg.ArgumentParser(prog = 'Music Genre Classifier')
+    parser.add_argument('filename')
+    args = parser.parse_args()
+    
+    df = pd.read_csv("../Dataset/features_30_sec.csv")
+    
+    df.drop(['filename','length'],axis=1,inplace=True)
+    cols = df.columns
+    
+    for col in cols:
+        if col.endswith("var"):
+            df.drop([col],axis=1,inplace=True)
+
+    # normalization
+    Y = df['label']
+    df.drop(['label'],axis=1,inplace=True)
+    mean = df.mean(axis=0)
+    sd = df.std(axis=0)
+
+    features = (audio_to_embedding(args.filename) - torch.tensor(mean,dtype=torch.float32)) / torch.tensor(sd,dtype=torch.float32)
+
+    model = pkl.load(open("../Model/ffn.pkl", "rb"))
+
+    pred_genre = torch.argmax(model(features))
+    labels = ['blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock']
+    print(labels[pred_genre])
